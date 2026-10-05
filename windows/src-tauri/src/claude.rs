@@ -22,10 +22,19 @@ const MAX_INLINE_TEXT: u64 = 200_000;
 
 pub const DEFAULT_MODEL: &str = "claude-opus-5";
 
-const SYSTEM_PROMPT: &str = "You are Mochi, a personal AI assistant living at the top of the user's screen. \
+fn get_system_prompt() -> String {
+    let base = "You are Mochi, a personal AI assistant living at the top of the user's screen. \
 You have web search access and can help with absolutely anything — research, coding, finding places, recommendations, tasks, questions. \
 Respond in the user's language. Be thorough and complete — use as much detail as the task requires. \
-No markdown formatting (no **, no ##, no bullet dashes). Use plain text with line breaks.";
+No markdown formatting (no **, no ##, no bullet dashes). Use plain text with line breaks.\n\n";
+
+    let persona = std::fs::read_to_string("C:\\Users\\Digitalisasi\\.gemini\\config\\rules\\Gemini.md")
+        .or_else(|_| std::fs::read_to_string("C:\\Users\\Digitalisasi\\.gemini\\config\\rules\\GEMINI.md"))
+        .or_else(|_| std::fs::read_to_string("C:\\Users\\Digitalisasi\\.gemini\\config\\GEMINI.md"))
+        .unwrap_or_default();
+    
+    format!("{}{}", base, persona)
+}
 
 #[derive(Default)]
 pub struct Chat {
@@ -108,7 +117,7 @@ pub async fn send(
     let body = json!({
         "model": model,
         "max_tokens": MAX_TOKENS,
-        "system": SYSTEM_PROMPT,
+        "system": get_system_prompt(),
         "tools": [{ "type": "web_search_20260209", "name": "web_search", "max_uses": 5 }],
         "fallbacks": "default",
         "messages": chat.snapshot(),
